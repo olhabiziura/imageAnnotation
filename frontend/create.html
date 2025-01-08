@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Project</title>
+    <style>
+
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .sidebar p {
+            font-size: 16px;
+        }
+        .sidebar .create-project-btn {
+            background-color: #2980b9;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .sidebar .create-project-btn:hover {
+            background-color: #3498db;
+        }
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .content h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #15161a;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #888;
+        }
+
+        .btn {
+            background: #6e8efb;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #a777e3;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button class="create-project-btn" onclick="window.location.href = '/main';">
+                <i class="fas fa-arrow-left"></i>   All Projects
+            </button>
+            <h3><span id="username">{{ username }}</span></h3>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h1>Create New Project</h1>
+            <form id="createProjectForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="projectName">Project Name:</label>
+                    <input type="text" id="projectName" name="projectName" placeholder="Enter project name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectDescription">Project Description:</label>
+                    <input type="text" id="projectDescription" name="projectDescription" placeholder="Enter project description">
+                </div>
+
+                <div class="form-group">
+                    <label for="imageFolder">Select Image Folder:</label>
+                    <input type="file" id="imageFolder" name="imageFolder" webkitdirectory directory>
+                    <small>Select a folder containing your images.</small>
+                </div>
+
+                <button type="submit" class="btn">Create Project</button>
+            </form>
+            <div id="message" class="error"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script>
+        document.getElementById('createProjectForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const projectName = document.getElementById('projectName').value;
+            const projectDescription = document.getElementById('projectDescription').value;
+            const imageFolderInput = document.getElementById('imageFolder');
+
+            // Clear previous messages
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = '';
+
+            // Validate inputs
+            if (!projectName) {
+                messageDiv.textContent = 'Project Name is required!';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('projectName', projectName);
+            formData.append('projectDescription', projectDescription);
+
+            // Add image files to FormData
+            if (imageFolderInput.files.length) {
+                Array.from(imageFolderInput.files).forEach(file => {
+                    // Only include image files
+                    if (file.type.startsWith('image/')) {
+                        formData.append('images', file);
+                    }
+                });
+            }
+
+            fetch('/create_project/submit/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 200) {
+                        window.location.href = '/main';
+                    } else {
+                        messageDiv.className = 'error';
+                        messageDiv.textContent = data.message;
+                    }
+                })
+                .catch(error => {
+                    messageDiv.className = 'error';
+                    messageDiv.textContent = 'Error: ' + error;
+                });
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

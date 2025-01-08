@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Label Easy - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            background: #fff;
+            color: #333;
+            width: 400px;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .container h1 {
+            margin-bottom: 1rem;
+            font-size: 24px;
+            color: #6e8efb;
+        }
+
+        .container p {
+            margin: 1rem 0;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .btn {
+            background: #6e8efb;
+            color: #fff;
+            border: none;
+            padding: 0.7rem;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #a777e3;
+        }
+
+        .link {
+            margin-top: 1rem;
+            font-size: 14px;
+        }
+
+        .link a {
+            color: #6e8efb;
+            text-decoration: none;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- Login Content will load here -->
+    </div>
+
+    <script>
+        const app = document.getElementById('app');
+
+        // Login Page Component
+        const loginPage = `
+            <h1>Hi! Welcome back to Label Easy!</h1>
+            <form id="loginForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <p class="link">Haven't joined us yet? Click here -> <a href="#" onclick="loadSignUp()">Sign Up</a></p>
+        `;
+
+        // Sign-Up Page Component
+        const signUpPage = `
+            <h1>We welcome you to Label Easy!</h1>
+            <p>Here you can create your image annotations fast and easy!</p>
+            <form id="signUpForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter a password">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm your password">
+                </div>
+                <button type="submit" class="btn">Sign Up</button>
+            </form>
+            <p class="link">Already with us? <a href="#" onclick="loadLogin()">Login</a></p>
+        `;
+
+        // Function to load Login Page
+        function loadLogin() {
+            app.innerHTML = loginPage;
+
+            // Handle form submission for login
+            document.getElementById('loginForm').addEventListener('submit', function (e) {
+                e.preventDefault(); // Prevent form from submitting
+
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                // Validate empty fields
+                if (!username || !password) {
+                    alert('Username and Password are required!');
+                    return;
+                }
+
+                // Send login request to backend
+                fetch('/login/', { 
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                    }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json(); 
+                    } else {
+                        throw new Error('Login failed: ' + response.statusText);
+                    }
+                })
+                .then(data => {
+                    const csrfToken = data.csrf_token;
+                    document.cookie = `csrftoken=${csrfToken}; path=/;`;
+                    window.location.href = '/main';
+                })
+                .catch(error => alert('Error: ' + error));
+               
+            
+            });
+        }
+
+
+
+
+        // Function to load Sign-Up Page
+        function loadSignUp() {
+            app.innerHTML = signUpPage;
+
+            // Handle form submission for sign-up
+            document.getElementById('signUpForm').addEventListener('submit', function (e) {
+                e.preventDefault(); // Prevent form from submitting
+
+                const username = document.getElementById('username').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // Validate empty fields
+                if (!username || !email || !password || !confirmPassword) {
+                    alert('All fields must be filled out!');
+                    return;
+                }
+
+                // Validate if passwords match
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match!');
+                    return;
+                }
+
+                // Send sign-up request to backend
+                fetch('/register', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password,
+                    }),
+                })
+                    //.then(response => response.json())
+                    .then(response => {
+                        if (response.statusText == 'OK') {
+                            // Redirect to login page after sign-up
+                            loadLogin();
+                        } else {
+                            alert('Sign-Up failed: ' + response.statusText);
+                        }
+                    })
+                    .catch(error => alert('Error: ' + error));
+            });
+        }
+
+        // Initial Load (Login Page)
+        loadLogin();
+    </script>
+</body>
+</html>

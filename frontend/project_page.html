@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Page - Label Easy</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .sidebar p {
+            font-size: 16px;
+        }
+        .sidebar .create-project-btn {
+            background-color: #2980b9;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .sidebar .create-project-btn:hover {
+            background-color: #3498db;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding-left: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 2px solid #ddd;
+            font-weight: bold;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .image-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .image-table th, .image-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .image-table th {
+            background-color: #f4f4f4;
+        }
+        .image-table td:first-child {
+            max-width: 220px; /* Set the max width for the Image Name column */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Add ellipsis if the content overflows */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+        .image-table a {
+            color: #2980b9;
+            text-decoration: none;
+        }
+        .image-table a:hover {
+            text-decoration: underline;
+        }
+        .modal-content img {
+            max-width: 100%;
+            height: auto;
+        }
+        .modal-close {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        /* Style for the modal background */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 80%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow: auto;
+            border: 5px solid black;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Modal content (image container) */
+        .modal-content {
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            position: relative;
+            max-width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .pagination button:hover {
+            background-color: #3498db;
+        }
+        .pagination-info {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+            gap: 10px;
+        }
+        .edit-icon {
+            cursor: pointer;
+            font-size: 18px;
+            color: #555;
+            vertical-align: middle;
+        }
+
+        .edit-icon:hover {
+            color: #000;
+        }
+
+        #project-name-input {
+            font-size: 18px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button class="create-project-btn" onclick="window.location.href = '/main';">
+                <i class="fas fa-arrow-left"></i>     All Projects
+            </button>
+            
+            
+            
+            
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div id="project-header" class="project-header">
+                <div class = 'buttons'>
+                    <button onclick="deleteProject()">delete project</button>
+                    <button onclick="showDownloadOptions()">download</button>
+                </div>
+                <h2 id="project-name">Project Name</h2>
+                
+                
+                <div class="buttons">
+                    <button onclick="addFiles()">+ Add files</button>
+                    <button onclick="addLabels()">Add/Delete Labels</button>
+                    <button onclick="window.location.href='{% url 'start_annotation' project_id=projectID%}';">Start Annotating</button>
+                    
+                </div>
+            </div>
+            <div id="bubbles-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                <!-- Annotation bubbles will be dynamically inserted here -->
+            </div>
+            <!-- Image Table -->
+            <table class="image-table">
+                <thead>
+                    <tr>
+                        <th>Image Name</th>
+                        <th>Annotation</th>
+                    </tr>
+                </thead>
+                <tbody id="image-list">
+                    <!-- Dynamic rows will be inserted here -->
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button id="prev-button" disabled>Previous</button>
+                <button id="next-button">Next</button>
+                <div class="pagination-info">
+                    Page   <span id="current-page">1</span> of <span id="total-pages">1</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for displaying image and annotation -->
+    <div id="image-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <img id="modal-image" src="" alt="Image" style="max-width: 100%; max-height: 80vh;">
+            <p id="modal-annotation"></p>
+        </div>
+    </div>
+<script>
+    let currentImageUrl = ''; // Global variable to store the current image URL
+    let currentPage = 1; // Start with the first page
+    let currentLabel = ''; // Store the current label (if any)
+    
+    // Get the projectID from Django template
+    const projectID = {{ projectID }};
+    
+    function updatePaginationButtons() {
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        
+        // Disable 'Previous' button if we're on the first page
+        prevButton.disabled = currentPage === 1;
+        
+        // Disable 'Next' button if we're on the last page
+        nextButton.disabled = currentPage === parseInt(document.getElementById('total-pages').innerText);
+    }
+
+    // Fetch project data
+    function fetchImages(page, label = '') {
+        // Add the label to the query string if it is provided
+        let url = `/${projectID}/?page=${page}`;
+        if (label) {
+            url += `&label=${label}`;
+        }
+    
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('project-name').innerHTML = `${data.project_data.projectName} <span class="edit-icon" onclick="editProjectName()">✏️</span>`;
+    
+                // Handle annotation fields
+                const bubblesContainer = document.getElementById('bubbles-container');
+                bubblesContainer.innerHTML = ''; // Clear previous bubbles
+                const annotationFields = data.project_data.annotationFields || [];
+                if (annotationFields.length === 0) {
+                    addBubble(bubblesContainer, 'No Annotation', true);
+                    addBubble(bubblesContainer, 'All', true);
+                } else {
+                    addBubble(bubblesContainer, 'All', true);
+                    addBubble(bubblesContainer, 'No Annotation', true);
+                    annotationFields.forEach(field => {
+                    if (field !== 'All') {
+                        addBubble(bubblesContainer, field);
+                    }
+                })
+                }
+    
+                const imageList = document.getElementById('image-list');
+                imageList.innerHTML = ''; // Clear previous images
+    
+                data.images.forEach(image => {
+                    const row = document.createElement('tr');
+                    const imageName = image.file.split('/').pop();
+                    const truncatedImageName = imageName.length > 20 ? `......${imageName.slice(-18)}` : imageName;
+    
+                    row.innerHTML = `
+                        <td><a href="#" onclick="showImage(${image.imageId})">${truncatedImageName}</a></td>
+                        <td>${image.annotation || 'No annotation'}</td>
+                    `;
+                    imageList.appendChild(row);
+                });
+    
+                // Update current page and total pages
+                document.getElementById('current-page').innerText = data.current_page;
+                document.getElementById('total-pages').innerText = data.total_pages;
+    
+                // Update the currentPage and currentLabel globally
+                currentPage = data.current_page;
+                updatePaginationButtons();
+            });
+    }
+    
+    // Call fetchImages to load the first page when the page is ready
+    fetchImages(currentPage);
+    
+    // Next and previous button handlers
+    document.getElementById('prev-button').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            fetchImages(currentPage, currentLabel); // Pass currentLabel to preserve filter
+        }
+    });
+    
+    document.getElementById('next-button').addEventListener('click', function() {
+        currentPage++;
+        fetchImages(currentPage, currentLabel); // Pass currentLabel to preserve filter
+    });
+    
+    // Function to show image in a pop-up window
+    function showImage(imageID) {
+        fetch(`/image/${imageID}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch image data");
+                }
+    
+                // Create a blob from the binary response
+                return response.blob();
+            })
+            .then(blob => {
+                // If there is a previous image URL, revoke it
+                if (currentImageUrl) {
+                    URL.revokeObjectURL(currentImageUrl);
+                }
+    
+                // Create a new URL for the blob
+                currentImageUrl = URL.createObjectURL(blob);
+    
+                // Update the modal with the image and show the modal
+                document.getElementById('modal-image').src = currentImageUrl;
+                document.getElementById('image-modal').style.display = 'block';
+            })
+            .catch(error => console.error('Error fetching image file:', error));
+    }
+    
+    // Function to add a clickable bubble
+    function addBubble(container, text) {
+        const bubble = document.createElement('span');
+        bubble.textContent = text;
+        bubble.style.padding = '5px 10px';
+        bubble.style.borderRadius = '15px';
+        bubble.style.color = '#2c3e50';
+        bubble.style.backgroundColor = '#ecf0f1';
+        bubble.style.border = '1px solid #2c3e50';
+        bubble.style.fontSize = '12px';
+        bubble.style.fontWeight = 'bold';
+        bubble.style.cursor = 'pointer'; // Make it look clickable
+        bubble.style.transition = 'background-color 0.2s ease';
+    
+        // Add hover effect
+        bubble.addEventListener('mouseover', () => {
+            bubble.style.backgroundColor = '#d1d8e0';
+        });
+        bubble.addEventListener('mouseout', () => {
+            bubble.style.backgroundColor = '#ecf0f1';
+        });
+    
+        // Add click functionality
+        bubble.addEventListener('click', () => {
+            filterImagesByAnnotation(text);
+        });
+    
+        container.appendChild(bubble);
+    }
+    
+    // Function to filter images by annotation and call fetchImages
+    function filterImagesByAnnotation(annotation) {
+        currentLabel = annotation === 'All' ? '' : annotation; // Update the label
+        currentPage = 1; // Reset to the first page when filtering
+        fetchImages(currentPage, currentLabel); // Call fetchImages with the new label
+    }
+
+        // Function to close modal
+        function closeModal() {
+            document.getElementById('image-modal').style.display = 'none';
+        }
+
+        // Function to handle the Add Files button click
+        function addFiles() {
+            // Create a pop-up dialog dynamically
+            const popUp = document.createElement('div');
+            popUp.style.position = 'fixed';
+            popUp.style.top = '50%';
+            popUp.style.left = '50%';
+            popUp.style.transform = 'translate(-50%, -50%)';
+            popUp.style.backgroundColor = 'white';
+            popUp.style.border = '1px solid #ddd';
+            popUp.style.padding = '20px';
+            popUp.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+            popUp.style.zIndex = '1000';
+
+            popUp.innerHTML = `
+                <h3>Upload Files</h3>
+                <p>Choose an option:</p>
+                <button id="upload-single">Upload Single Files</button>
+                <button id="upload-folder">Upload Folder</button>
+                <button id="close-popup">Cancel</button>
+            `;
+
+            document.body.appendChild(popUp);
+
+            // Close the pop-up
+            document.getElementById('close-popup').onclick = function () {
+                document.body.removeChild(popUp);
+            };
+
+            // Upload single files
+            document.getElementById('upload-single').onclick = function () {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.multiple = true;
+                input.accept = 'image/*';
+                input.onchange = function (event) {
+                    const files = event.target.files;
+                    uploadFilesToBackend(files);
+                    document.body.removeChild(popUp);
+                };
+                input.click();
+            };
+
+            // Upload folder
+            document.getElementById('upload-folder').onclick = function () {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.webkitdirectory = true; // Allows selecting a folder
+                input.onchange = function (event) {
+                    const files = event.target.files;
+                    uploadFilesToBackend(files);
+                    document.body.removeChild(popUp);
+                };
+                input.click();
+            };
+        }
+
+        // Function to upload files to the backend
+        function uploadFilesToBackend(files) {
+            const formData = new FormData();
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    formData.append('images', file);
+                }
+            });
+
+            fetch(`/${projectID}/upload-images/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Files uploaded successfully!');
+                        location.reload(); // Refresh the page
+                    } else {
+                        throw new Error('Failed to upload files.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading files:', error);
+                    alert('Error uploading files.');
+                });
+        }
+
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [key, value] = cookie.trim().split('=');
+                if (key === 'csrftoken') {
+                    return value;
+                }
+            }
+            return null;
+        }
+
+
+        let isEditing = false;
+        let tempLabels = []; // Keep track of new labels added during the edit
+
+        function addLabels() {
+            // Check if we are already in the editing state
+            if (isEditing) {
+                return; // Prevent adding the form again
+            }
+
+            // Set the flag to true since we are now editing
+            isEditing = true;
+            const bubblesContainer = document.getElementById("bubbles-container");
+
+            // Store the current bubbles text content in an array
+            const allBubbles = bubblesContainer.children;
+            const allBubblesText = [];
+            Array.from(allBubbles).forEach(bubble => {
+                const bubbleText = bubble.textContent.trim();
+                allBubblesText.push(bubbleText);
+                tempLabels.push(bubbleText); // Add the existing labels to tempLabels
+            });
+
+
+            // Clear the bubbles container and re-render with the updated tempLabels
+            bubblesContainer.innerHTML = "";
+            tempLabels.forEach((label) => {
+                const bubble = document.createElement("span");
+               
+                bubble.textContent = label;
+                bubble.style.padding = '5px 10px';
+                bubble.style.borderRadius = '15px';
+                bubble.style.color = '#2c3e50';
+                bubble.style.backgroundColor = '#ecf0f1';
+                bubble.style.border = '1px solid #2c3e50';
+                bubble.style.fontSize = '12px';
+                bubble.style.fontWeight = 'bold';
+                bubble.style.cursor = 'pointer'; // Make it look clickable
+                bubble.style.transition = 'background-color 0.2s ease';
+
+                if (label !== "All" && label !== "No Annotation") {
+                    const deleteIcon = document.createElement("span");
+                    deleteIcon.textContent = "✖";
+                    deleteIcon.style.marginLeft = "10px";
+                    deleteIcon.style.color = "red";
+                    deleteIcon.style.cursor = "pointer";
+                    deleteIcon.onclick = () => {
+                        bubble.remove();
+                        updateTempLabels(label, 'remove'); // Remove from tempLabels when deleted
+                    };
+                    bubble.appendChild(deleteIcon);
+                }
+                bubblesContainer.appendChild(bubble);
+            });
+
+            // Add text input and Add button
+            const inputField = document.createElement("input");
+            inputField.type = "text";
+            inputField.placeholder = "Enter new label";
+            inputField.style.marginRight = "10px";
+
+            const addButton = document.createElement("button");
+            addButton.textContent = "Add";
+            addButton.onclick = () => {
+                const newLabel = inputField.value.trim();
+                if (newLabel && !tempLabels.includes(newLabel)) {
+                    // Add new label to the tempLabels array
+                    tempLabels.push(newLabel);
+
+                    // Create a new bubble for the added label
+                    const newBubble = document.createElement("span");
+                    newBubble.classList.add("label-bubble");
+                    newBubble.textContent = newLabel;
+                    newBubble.style.padding = "5px 10px";
+                    newBubble.style.borderRadius = "15px";
+                    newBubble.style.color = "#2c3e50";
+                    newBubble.style.backgroundColor = "#ecf0f1";
+                    newBubble.style.border = "1px solid #2c3e50";
+                    newBubble.style.marginRight = "10px";
+                    newBubble.style.display = "inline-flex";
+                    newBubble.style.alignItems = "center";
+                    newBubble.style.cursor = "default";
+                    // Add a delete icon to the new bubble
+                    const deleteIcon = document.createElement("span");
+                    deleteIcon.textContent = "✖";
+                    deleteIcon.style.marginLeft = "10px";
+                    deleteIcon.style.color = "red";
+                    deleteIcon.style.cursor = "pointer";
+                    deleteIcon.onclick = () => {
+                        newBubble.remove(); // Remove bubble if delete icon clicked
+                        updateTempLabels(newLabel, 'remove'); // Remove from tempLabels
+                    };
+
+                    newBubble.appendChild(deleteIcon);
+                    bubblesContainer.appendChild(newBubble); // Add the new bubble to the container
+                }
+                inputField.value = ""; // Clear input field after adding the label
+            };
+
+            const doneButton = document.createElement("button");
+            doneButton.textContent = "Done";
+            doneButton.onclick = () => {
+                // Check if the tempLabels and allBubblesText are the same
+                const isSame = tempLabels.length === allBubblesText.length &&
+                    tempLabels.every(label => allBubblesText.includes(label));
+
+                if (isSame) {
+                    // No changes made, reload the page
+                    location.reload(); // Or you can just return without doing anything
+                } else {
+                    // If there were changes, update labels
+                    updateLabels(tempLabels);
+                }
+
+                isEditing = false; // Return to the usual state (non-edit mode)
+                tempLabels = []; // Clear temporary labels array
+
+                // Clean up the input field and buttons
+                bubblesContainer.removeChild(inputField);
+                bubblesContainer.removeChild(addButton);
+                bubblesContainer.removeChild(doneButton);
+            };
+
+            bubblesContainer.appendChild(inputField);
+            bubblesContainer.appendChild(addButton);
+            bubblesContainer.appendChild(doneButton);
+        }
+
+        // Helper function to update the tempLabels array when labels are added or removed
+        function updateTempLabels(label, action) {
+            if (action === 'remove') {
+                tempLabels = tempLabels.filter(tempLabel => tempLabel !== label);
+            } else {
+                if (!tempLabels.includes(label)) {
+                    tempLabels.push(label);
+                }
+            }
+        }
+        // Function to send updated labels to the backend
+        function updateLabels(updatedLabels) {
+
+            const transformedLabels = updatedLabels.map(label => ({
+                label: label, 
+            }));
+
+            fetch(`/${projectID}/update-labels/`, {
+                method: "POST",
+                body: JSON.stringify({ labels: transformedLabels }),
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(),
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.conflicting_annotations) {
+                        handleConflicts(data.conflicting_annotations); 
+                    } else {
+                        alert("Labels updated successfully!");
+                        location.reload();
+                    }
+                })
+                .catch((error) => console.error("Error updating labels:", error));
+        }
+
+        function handleConflicts(conflicts) {
+            const conflictList = [];  // Create a list to store conflicts that will be resolved
+
+            conflicts.forEach((conflict) => {
+                const userChoice = confirm(
+                    `Label "${conflict.label}" is used in some images. Do you want to delete all related annotations?`
+                );
+                conflict.delete = userChoice;  // Set delete flag based on user input
+                
+                // If user chose to delete, add to conflictList
+                if (userChoice) {
+                    conflictList.push(conflict);
+                }
+            });
+
+            // Fetch new request to conflict resolution URL and send conflictList
+            if (conflictList.length > 0) {
+                fetch(`/${projectID}/resolve-conflicts/`, {
+                    method: 'POST',
+                    body: JSON.stringify({ conflicts: conflictList }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken(),
+                    }
+                })
+                .then(response => response.json())
+                .then((data) => {
+                    if (data.status === "200") {
+                        alert("Labels updated successfully!");
+                        location.reload();
+                    } else {
+                        alert("Error resolving conflicts. Please try again.");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error resolving conflicts:", error);
+                    alert("An error occurred while updating labels.");
+                });
+            }
+            
+            location.reload();
+        }
+
+
+        // Function to edit the project name
+        function editProjectName() {
+            const projectNameElement = document.getElementById('project-name');
+            const currentName = projectNameElement.firstChild.nodeValue.trim(); 
+
+            // Create an input field with the current name prefilled
+            const inputField = document.createElement('input');
+            inputField.type = 'text';
+            inputField.value = currentName;
+            inputField.id = 'project-name-input';
+
+            // Replace the project name with the input field
+            projectNameElement.innerHTML = '';
+            projectNameElement.appendChild(inputField);
+
+            // Add a save button next to the input field
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.onclick = saveProjectName;
+            projectNameElement.appendChild(saveButton);
+        }
+
+        // Function to save the updated project name and send a request to the backend
+        function saveProjectName() {
+            const inputField = document.getElementById('project-name-input');
+            const newName = inputField.value.trim();
+
+            if (newName) {
+                
+                // Send a POST request to the backend to update the project name
+                fetch(`/${projectID}/edit/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({ projectName: newName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the project name in the DOM
+                        const projectNameElement = document.getElementById('project-name');
+                        projectNameElement.innerHTML = `${data.projectName} <span class="edit-icon" onclick="editProjectName()">✏️</span>`;
+                    } else {
+                        alert(data.error || 'An error occurred');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to update project name');
+                });
+            } else {
+                alert('Project name cannot be empty.');
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+        function deleteProject() {
+        
+            if (confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+                // Send a DELETE request to the backend to delete the project
+                fetch(`/${projectID}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'), // Pass the CSRF token
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/main/';  
+                    } else {
+                        alert(data.error || 'An error occurred while deleting the project');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to delete project');
+                });
+            }
+        }
+
+        // Function to display options when the "Download" button is pressed
+        function showDownloadOptions() {
+            // Create the modal or dialog box
+            const modal = document.createElement('div');
+            modal.id = 'download-options-modal';
+            modal.style.position = 'fixed';
+            modal.style.top = '50%';
+            modal.style.left = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+            modal.style.padding = '20px';
+            modal.style.backgroundColor = '#fff';
+            modal.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+            modal.style.zIndex = '1000';
+
+            // Add options to the modal
+            modal.innerHTML = `
+                <h3>Choose how to save your labeled images:</h3>
+                <button onclick="downloadOption(1)">Option 1: Save to Folders</button>
+                <button onclick="downloadOption(2)">Option 2: Save with CSV</button>
+                <button onclick="downloadOption(3)">Option 3: Save with JSON</button>
+                <button onclick="downloadOption(4)">Option 4: Save as TFRecord</button>
+                <button onclick="closeDownloadOptions()">Cancel</button>
+            `;
+
+            // Append the modal to the body
+            document.body.appendChild(modal);
+        }
+
+        // Function to close the modal
+        function closeDownloadOptions() {
+            const modal = document.getElementById('download-options-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Function to handle download for the selected option
+        function downloadOption(option) {
+            // Send a request to the corresponding Django view
+            const url = `/download/${projectID}/${option}/`; // Backend URL for the selected option
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),// Get CSRF token for Django requests
+                },
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Failed to download');
+                    }
+                    return response.blob();
+                })
+                .then((blob) => {
+                    // Create a temporary download link
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `labeled_images_option_${option}.zip`; // Set default filename
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    alert('Failed to download the file.');
+                })
+                .finally(() => {
+                    // Close the modal after download
+                    closeDownloadOptions();
+                });
+        }
+
+    </script>
+    
+</body>
+</html>
